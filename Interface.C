@@ -1,6 +1,7 @@
 #include "Interface.H"
 #include "Utilities.H"
 #include "faceTriangulation.H"
+#include "Adapter.H"
 
 
 using namespace Foam;
@@ -189,6 +190,10 @@ void preciceAdapter::Interface::configureMesh(const fvMesh& mesh)
         // Pass the mesh vertices information to preCICE
         precice_.setMeshVertices(meshID_, numDataLocations_, vertices, vertexIDs_);
 
+        // add setMeshVertices for new "fake" neural network mesh
+        meshIDNN_ = precice_.getMeshID("Fluid-NN-Nodes-Mesh");
+        precice_.setMeshVertices(meshIDNN_, numDataLocations_, vertices, vertexIDs_);
+
         // meshConnectivity for prototype neglected
         // Only set the triangles, if necessary
         if (meshConnectivity_)
@@ -365,6 +370,7 @@ void preciceAdapter::Interface::readCouplingData()
 
             // Make preCICE read vector or scalar data
             // and fill the adapter's buffer
+            /*
             if (couplingDataReader->hasVectorData())
             {
                 precice_.readBlockVectorData(
@@ -381,6 +387,34 @@ void preciceAdapter::Interface::readCouplingData()
                     vertexIDs_,
                     dataBuffer_);
             }
+            */
+
+            bool newTimeStep = precice_.isTimeWindowComplete();
+            if (newTimeStep)
+            {
+                precice_.getDataID("displacementDeltaNN", meshIDNN_);
+                precice_.readBlockVectorData(
+                    couplingDataReader->dataID(),
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+
+            } else {
+                precice_.getDataID("displacementDelta", meshID_);
+                precice_.readBlockVectorData(
+                    couplingDataReader->dataID(),
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+
+            }
+
+
+            /* Always read data from both data fields for each mesh. 
+                Send the neural network flag here and set the correct data
+                buffer in the read() below.
+            
+            */
 
             // Read the received data from the buffer
             couplingDataReader->read(dataBuffer_, dim_);
@@ -412,6 +446,14 @@ void preciceAdapter::Interface::writeCouplingData()
                 numDataLocations_,
                 vertexIDs_,
                 dataBuffer_);
+
+            // Need to rewrite this data to the neural network mesh
+            precice_.getDataID("ForceNN", meshIDNN_);
+            precice_.writeBlockVectorData(
+                couplingDataWriter->dataID(),
+                numDataLocations_,
+                vertexIDs_,
+                dataBuffer_);
         }
         else
         {
@@ -421,6 +463,8 @@ void preciceAdapter::Interface::writeCouplingData()
                 vertexIDs_,
                 dataBuffer_);
         }
+
+
     }
     // }
 }

@@ -206,6 +206,11 @@ bool preciceAdapter::Adapter::configFileRead()
     return true;
 }
 
+bool preciceAdapter::Adapter::useNeuralNetwork()
+{
+    return _newTimeStep;
+}
+
 void preciceAdapter::Adapter::configure()
 {
     // Read the adapter's configuration file
@@ -429,6 +434,11 @@ void preciceAdapter::Adapter::execute()
 
     // Read the received coupling data from the buffer
     readCouplingData();
+
+    /*
+        If this is the first iteration, apply the values from the neural network solver.
+        Reset the check if the time window is complete
+    */
 
     // If the coupling is not going to continue, tear down everything
     // and stop the simulation.
@@ -1824,3 +1834,5 @@ preciceAdapter::Adapter::~Adapter()
 
     return;
 }
+
+

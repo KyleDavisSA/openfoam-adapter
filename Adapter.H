@@ -370,6 +370,9 @@ private:
     //  memory in a proper way. Called by the destructor.
     void teardown();
 
+    bool _newTimeStep;
+
+    
 public:
     // Methods called by the functionObject
 
@@ -387,6 +390,9 @@ public:
 
     //- Called by the functionObject's end()
     void end();
+
+    //- Return if the neural network values must be used
+    bool useNeuralNetwork();
 
     //- Destructor
     ~Adapter();
