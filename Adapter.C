@@ -381,6 +381,9 @@ void preciceAdapter::Adapter::execute()
             "error");
     }
 
+   
+    adapterInfo("Beginning of execute...", "info");
+
     // The solver has already solved the equations for this timestep.
     // Now call the adapter's methods to perform the coupling.
 
@@ -388,9 +391,11 @@ void preciceAdapter::Adapter::execute()
     // if (ncheckpointed is nregisterdobjects. )
 
     // Write the coupling data in the buffer
+    adapterInfo("Before writing data...", "info");
     writeCouplingData();
 
     // Advance preCICE
+    DEBUG(adapterInfo("Before advance..." ));
     advance();
 
     // Read checkpoint if required

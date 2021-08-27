@@ -146,6 +146,10 @@ void preciceAdapter::Interface::configureMesh(const fvMesh& mesh)
 
         // Pass the mesh vertices information to preCICE
         precice_.setMeshVertices(meshID_, numDataLocations_, vertices, vertexIDs_);
+
+        // add setMeshVertices for new "fake" neural network mesh
+        meshIDNN_ = precice_.getMeshID("Fluid-NN-Nodes-Mesh");
+        precice_.setMeshVertices(meshIDNN_, numDataLocations_, vertices, vertexIDs_);
     }
     else if (locationsType_ == "faceNodes")
     {
@@ -189,10 +193,6 @@ void preciceAdapter::Interface::configureMesh(const fvMesh& mesh)
 
         // Pass the mesh vertices information to preCICE
         precice_.setMeshVertices(meshID_, numDataLocations_, vertices, vertexIDs_);
-
-        // add setMeshVertices for new "fake" neural network mesh
-        meshIDNN_ = precice_.getMeshID("Fluid-NN-Nodes-Mesh");
-        precice_.setMeshVertices(meshIDNN_, numDataLocations_, vertices, vertexIDs_);
 
         // meshConnectivity for prototype neglected
         // Only set the triangles, if necessary
@@ -389,18 +389,20 @@ void preciceAdapter::Interface::readCouplingData()
             }
             */
 
-            bool newTimeStep = precice_.isTimeWindowComplete();
-            if (newTimeStep)
+            //bool newTimeStep = precice_.isTimeWindowComplete();
+
+            if (couplingDataReader->hasVectorData())
             {
-                precice_.getDataID("displacementDeltaNN", meshIDNN_);
+            /*if (newTimeStep == 1)
+            {
+                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
                 precice_.readBlockVectorData(
-                    couplingDataReader->dataID(),
+                    dispNNID,
                     numDataLocations_,
                     vertexIDs_,
                     dataBuffer_);
 
             } else {
-                precice_.getDataID("displacementDelta", meshID_);
                 precice_.readBlockVectorData(
                     couplingDataReader->dataID(),
                     numDataLocations_,
@@ -408,6 +410,24 @@ void preciceAdapter::Interface::readCouplingData()
                     dataBuffer_);
 
             }
+            
+                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
+                precice_.readBlockVectorData(
+                    couplingDataReader->dataID(),
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+            */
+                adapterInfo("Reading displacementDeltas in vector...", "info");
+                precice_.readBlockVectorData(
+                    couplingDataReader->dataID(),
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+            }
+        
+
+            //INFO(adapterInfo("Read data: " + std::to_string(dataBuffer_)));
 
 
             /* Always read data from both data fields for each mesh. 
@@ -441,22 +461,28 @@ void preciceAdapter::Interface::writeCouplingData()
         // Make preCICE write vector or scalar data
         if (couplingDataWriter->hasVectorData())
         {
+            adapterInfo("Writing forces in vector...", "info");
+            int meshIDCenters = precice_.getMeshID("Fluid-Centers-Mesh");
+            int forceID = precice_.getDataID("Force", meshIDCenters);
             precice_.writeBlockVectorData(
-                couplingDataWriter->dataID(),
+                forceID,
                 numDataLocations_,
                 vertexIDs_,
                 dataBuffer_);
 
             // Need to rewrite this data to the neural network mesh
-            precice_.getDataID("ForceNN", meshIDNN_);
+            int forceNNID = precice_.getDataID("Force", meshIDNN_);
             precice_.writeBlockVectorData(
-                couplingDataWriter->dataID(),
+                forceNNID,
                 numDataLocations_,
                 vertexIDs_,
                 dataBuffer_);
+                
+                
         }
         else
         {
+            adapterInfo("Writing forces in scalar...", "info");
             precice_.writeBlockScalarData(
                 couplingDataWriter->dataID(),
                 numDataLocations_,
