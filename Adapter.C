@@ -381,9 +381,11 @@ void preciceAdapter::Adapter::execute()
     // if (ncheckpointed is nregisterdobjects. )
 
     // Write the coupling data in the buffer
+    adapterInfo("Before writing data...", "info");
     writeCouplingData();
 
     // Advance preCICE
+    DEBUG(adapterInfo("Before advance..." ));
     advance();
 
     // Read checkpoint if required

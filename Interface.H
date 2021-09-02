@@ -26,6 +26,9 @@ protected:
     //- Mesh ID assigned by preCICE to the interface
     int meshID_;
 
+    //- Mesh ID for the neural network mesh
+    int meshIDNN_;
+
     //- Names of the OpenFOAM patches that form the interface
     std::vector<std::string> patchNames_;
 

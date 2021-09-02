@@ -370,6 +370,8 @@ private:
     //  memory in a proper way. Called by the destructor.
     void teardown();
 
+    bool _newTimeStep;
+
 public:
     // Methods called by the functionObject
 

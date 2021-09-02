@@ -1,6 +1,7 @@
 #include "Interface.H"
 #include "Utilities.H"
 #include "faceTriangulation.H"
+#include "Adapter.H"
 
 
 using namespace Foam;
@@ -145,6 +146,10 @@ void preciceAdapter::Interface::configureMesh(const fvMesh& mesh)
 
         // Pass the mesh vertices information to preCICE
         precice_.setMeshVertices(meshID_, numDataLocations_, vertices, vertexIDs_);
+
+        // add setMeshVertices for new "fake" neural network mesh
+        meshIDNN_ = precice_.getMeshID("Fluid-NN-Nodes-Mesh");
+        precice_.setMeshVertices(meshIDNN_, numDataLocations_, vertices, vertexIDs_);
     }
     else if (locationsType_ == "faceNodes")
     {
@@ -367,20 +372,46 @@ void preciceAdapter::Interface::readCouplingData()
             // and fill the adapter's buffer
             if (couplingDataReader->hasVectorData())
             {
+            /*if (newTimeStep == 1)
+            {
+                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
+                precice_.readBlockVectorData(
+                    dispNNID,
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+            } else {
                 precice_.readBlockVectorData(
                     couplingDataReader->dataID(),
                     numDataLocations_,
                     vertexIDs_,
                     dataBuffer_);
             }
-            else
-            {
-                precice_.readBlockScalarData(
+            
+                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
+                precice_.readBlockVectorData(
+                    couplingDataReader->dataID(),
+                    numDataLocations_,
+                    vertexIDs_,
+                    dataBuffer_);
+            */
+                adapterInfo("Reading displacementDeltas in vector...", "info");
+                precice_.readBlockVectorData(
                     couplingDataReader->dataID(),
                     numDataLocations_,
                     vertexIDs_,
                     dataBuffer_);
             }
+
+
+            //INFO(adapterInfo("Read data: " + std::to_string(dataBuffer_)));
+
+
+            /* Always read data from both data fields for each mesh. 
+                Send the neural network flag here and set the correct data
+                buffer in the read() below.
+            
+            */
 
             // Read the received data from the buffer
             couplingDataReader->read(dataBuffer_, dim_);
@@ -405,22 +436,22 @@ void preciceAdapter::Interface::writeCouplingData()
         couplingDataWriter->write(dataBuffer_, meshConnectivity_, dim_);
 
         // Make preCICE write vector or scalar data
-        if (couplingDataWriter->hasVectorData())
-        {
+        adapterInfo("Writing forces in vector...", "info");
+        int meshIDCenters = precice_.getMeshID("Fluid-Centers-Mesh");
+        int forceID = precice_.getDataID("Force", meshIDCenters);
+        precice_.writeBlockVectorData(
+                forceID,
+                numDataLocations_,
+                vertexIDs_,
+                dataBuffer_);
+
+        // Need to rewrite this data to the neural network mesh
+        int forceNNID = precice_.getDataID("Force", meshIDNN_);
             precice_.writeBlockVectorData(
-                couplingDataWriter->dataID(),
+                forceNNID,
                 numDataLocations_,
                 vertexIDs_,
                 dataBuffer_);
-        }
-        else
-        {
-            precice_.writeBlockScalarData(
-                couplingDataWriter->dataID(),
-                numDataLocations_,
-                vertexIDs_,
-                dataBuffer_);
-        }
     }
     // }
 }
