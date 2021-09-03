@@ -372,40 +372,26 @@ void preciceAdapter::Interface::readCouplingData()
             // and fill the adapter's buffer
             if (couplingDataReader->hasVectorData())
             {
-            /*if (newTimeStep == 1)
-            {
-                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
-                precice_.readBlockVectorData(
-                    dispNNID,
-                    numDataLocations_,
-                    vertexIDs_,
-                    dataBuffer_);
-            } else {
-                precice_.readBlockVectorData(
-                    couplingDataReader->dataID(),
-                    numDataLocations_,
-                    vertexIDs_,
-                    dataBuffer_);
-            }
             
-                int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
-                precice_.readBlockVectorData(
-                    couplingDataReader->dataID(),
-                    numDataLocations_,
-                    vertexIDs_,
-                    dataBuffer_);
-            */
-                adapterInfo("Reading displacementDeltas in vector...", "info");
-                precice_.readBlockVectorData(
-                    couplingDataReader->dataID(),
-                    numDataLocations_,
-                    vertexIDs_,
-                    dataBuffer_);
+                bool newTimeStep = precice_.isTimeWindowComplete();
+
+                if (newTimeStep){
+                    adapterInfo("Reading Neural Network displacementDeltas in vector...", "info");
+                    int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
+                    precice_.readBlockVectorData(
+                        dispNNID,
+                        numDataLocations_,
+                        vertexIDs_,
+                        dataBuffer_);
+                }else{
+                    adapterInfo("Reading displacementDeltas in vector...", "info");
+                    precice_.readBlockVectorData(
+                        couplingDataReader->dataID(),
+                        numDataLocations_,
+                        vertexIDs_,
+                        dataBuffer_);
+                }
             }
-
-
-            //INFO(adapterInfo("Read data: " + std::to_string(dataBuffer_)));
-
 
             /* Always read data from both data fields for each mesh. 
                 Send the neural network flag here and set the correct data
