@@ -373,11 +373,12 @@ void preciceAdapter::Interface::readCouplingData()
             if (couplingDataReader->hasVectorData())
             {
             
-                bool newTimeStep = precice_.isTimeWindowComplete();
+                //bool newTimeStep = precice_.isTimeWindowComplete();
+                bool newTimeStep = false;
 
                 if (newTimeStep){
                     adapterInfo("Reading Neural Network displacementDeltas in vector...", "info");
-                    int dispNNID = precice_.getDataID("DisplacementDeltaNN", meshIDNN_);
+                    int dispNNID = precice_.getDataID("DisplacementNN", meshIDNN_);
                     precice_.readBlockVectorData(
                         dispNNID,
                         numDataLocations_,
