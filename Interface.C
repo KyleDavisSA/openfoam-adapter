@@ -375,12 +375,12 @@ void preciceAdapter::Interface::readCouplingData()
             
                 bool newTimeStep = precice_.isTimeWindowComplete();
                 //bool newTimeStep = false;
-
-                if (newTimeStep){
-                    adapterInfo("Reading Neural Network displacementDeltas in vector...", "info");
-                    int dispNNID = precice_.getDataID("DisplacementNN", meshIDNN_);
+                if (newTimeStep){                    
+                    meshIDNN_ = precice_.getMeshID("Fluid-NN-Nodes-Mesh");                    
+                    dispNNID_ = precice_.getDataID("DisplacementNN", meshIDNN_);
+                    adapterInfo("Reading Neural Network displacementDeltas in vector...", "info");                    
                     precice_.readBlockVectorData(
-                        dispNNID,
+                        dispNNID_,
                         numDataLocations_,
                         vertexIDs_,
                         dataBuffer_);

@@ -26,8 +26,11 @@ protected:
     //- Mesh ID assigned by preCICE to the interface
     int meshID_;
 
-    //- Mesh ID for the neural network mesh
-    int meshIDNN_;
+    //- Data ID for the neural network mesh  
+    int dispNNID_ = 0;
+
+    //- Mesh ID for the neural network mesh  
+    int meshIDNN_ = 0;    
 
     //- Names of the OpenFOAM patches that form the interface
     std::vector<std::string> patchNames_;
@@ -92,7 +95,7 @@ public:
 
     //- Call write() on each registered couplingDataWriter to extract the boundary
     //  data and write them into the buffer
-    void writeCouplingData();
+    void writeCouplingData();    
 
     //- Destructor
     ~Interface();
