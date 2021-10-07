@@ -381,8 +381,7 @@ void preciceAdapter::Adapter::execute()
     // if (ncheckpointed is nregisterdobjects. )
 
     // Write the coupling data in the buffer
-    adapterInfo("Before writing data...", "info");
-    writeCouplingData();
+    
 
     // Advance preCICE
     DEBUG(adapterInfo("Before advance..." ));
@@ -410,6 +409,9 @@ void preciceAdapter::Adapter::execute()
         writeCheckpoint();
         fulfilledWriteCheckpoint();
     }
+
+    adapterInfo("Before writing data...", "info");
+    writeCouplingData();
 
     // As soon as OpenFOAM writes the results, it will not try to write again
     // if the time takes the same value again. Therefore, during an implicit
